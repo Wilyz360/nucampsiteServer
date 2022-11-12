@@ -79,4 +79,141 @@ campsiteRouter.route('/:campsiteId')
     .catch( err => next(err)); 
 });
 
+//Request for comments - Enpoints for /:campsiteId/comments
+campsiteRouter.route('/:campsiteId/comments') 
+.get((req, res, next) => { 
+    Campsite.findById(req.params.campsiteId) // it looks for a single campsite comment 
+    .then( campsite => { 
+        if(campsite){ // check if campsite exist
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.json(campsite.comments);
+        } else {
+            err = new Error(`Campsite ${req.params.campsiteId} not found`);
+            err.status = 404;
+            return next(err);
+        }
+    }).catch( err => next(err) ); 
+})
+.post((req, res, next) => {
+    Campsite.findById(req.params.campsiteId) // it looks for a single campsite comment 
+    .then( campsite => { 
+        if(campsite){
+            campsite.comments.push(req.body); // add new comment to the comment array of the campsite collection
+            campsite.save() // to save the new comment 
+            .then( campsite => {
+                res.statusCode = 200 ;
+                res.setHeader('Content-Type', 'application/json');
+                res.json(campsite); // send back comments using json format 
+            })
+            .catch( err => next(err)); 
+        } else {
+            err = new Error(`Campsite ${req.params.campsiteId} not found`);
+            err.status = 404;
+            return next(err);
+        }
+    }).catch( err => next(err) );
+})
+.put((req, res) => {
+    res.statusCode = 403,
+    res.end(`PUT operation not supported on /campsites/${req.params.campsiteId}/comments`);
+})
+.delete((req, res, next) => {
+    Campsite.findById(req.params.campsiteId) // it looks for a single campsite comment 
+    .then( campsite => { 
+        if(campsite){
+            for(let i = (campsite.comments.length-1); i >= 0; i--){
+                campsite.comments.id(campsite.comments[i]._id).remove(); // delete all comments by id
+            }
+            campsite.save() // to save the new comment 
+            .then( campsite => {
+                res.statusCode = 200 ;
+                res.setHeader('Content-Type', 'application/json');
+                res.json(campsite); // send back comments using json format 
+            })
+            .catch( err => next(err)); 
+        } else {
+            err = new Error(`Campsite ${req.params.campsiteId} not found`);
+            err.status = 404;
+            return next(err);
+        }
+    }).catch( err => next(err) );
+});
+
+// Request for specific campsite ids - Endpoits for /:campsiteId/comments/:commentId
+campsiteRouter.route('/:campsiteId/comments/:commentId') // handle for specific comment of specific campsite
+.get((req, res, next) => { 
+    Campsite.findById(req.params.campsiteId) // it looks for a single campsite comment 
+    .then( campsite => { 
+        if(campsite && campsite.comments.id(req.params.commentId)){ // check if campsite and commentId exist
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.json(campsite.comments.id(req.params.commentId)); // send the specific comment that it was requested
+        } else if (!campsite) {
+            err = new Error(`Campsite ${req.params.campsiteId} not found`);
+            err.status = 404;
+            return next(err);
+        }  else {
+            err = new Error(`Comment ${req.params.commentId} not found`);
+            err.status = 404;
+            return next(err);
+        }
+    }).catch( err => next(err) ); 
+})
+.post((req, res) => {
+    res.statusCode = 403;
+    res.end(`POST operation not supported on /campstes/${req.params.campsiteId}/comments/${req.params.commentId}`);
+})
+.put((req, res, next) => {
+    Campsite.findById(req.params.campsiteId) // it looks for a single campsite comment 
+    .then( campsite => { 
+        if(campsite && campsite.comments.id(req.params.commentId)){ // check if campsite and commentId exist
+            if(req.body.rating) { // check if a new rating has been passed in
+                 campsite.comments.id(req.params.commentId).rating = req.body.rating; // update rating for this comment
+            }
+            if (req.body.text){ // check if a new text has been passed in
+                campsite.comments.id(req.params.commentId).text = req.body.text; // update comment text
+            }
+            campsite.save()
+            .then(campsite => {
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'applcation/json');
+                res.json(campsite);
+            })
+            .catch( err => next(err) ); 
+        } else if (!campsite) {
+            err = new Error(`Campsite ${req.params.campsiteId} not found`);
+            err.status = 404;
+            return next(err);
+        }  else {
+            err = new Error(`Comment ${req.params.commentId} not found`);
+            err.status = 404;
+            return next(err);
+        }
+    }).catch( err => next(err) );  
+}) 
+.delete((req, res, next) => {
+    Campsite.findById(req.params.campsiteId) // it looks for a single campsite comment 
+    .then( campsite => { 
+        if(campsite && campsite.comments.id(req.params.commentId)){ // check if campsite and commentId exist
+            campsite.comments.id(req.params.commentId).remove(); // remove comment by id
+            campsite.save()
+            .then(campsite => {
+                res.statusCode = 200;
+                res.setHeader('Content-Type', 'applcation/json');
+                res.json(campsite);
+            })
+            .catch( err => next(err) ); 
+        } else if (!campsite) {
+            err = new Error(`Campsite ${req.params.campsiteId} not found`);
+            err.status = 404;
+            return next(err);
+        }  else {
+            err = new Error(`Comment ${req.params.commentId} not found`);
+            err.status = 404;
+            return next(err);
+        }
+    }).catch( err => next(err) );
+});
+
 module.exports = campsiteRouter;
