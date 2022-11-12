@@ -10,6 +10,21 @@ const campsiteRouter = require('./routes/campsiteRouter');
 const partnerRouter = require('./routes/partnersRouter');
 const promotionRouter = require('./routes/promotionRouter');
 
+//Connect Express Server to MongoDB/Mongoose
+const mongoose = require('mongoose'); // get mongoose API
+
+const url = 'mongodb://localhost:27017/nucampsite'; // url for mogodb server
+const connect = mongoose.connect(url, { // set up connection
+  useCreateIndex: true,
+  useFindAndModify: false,
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+
+connect.then(() => console.log('Connected correctly to server'), // If connection success
+  err => console.log(err) // If there is error in the connection  
+); 
+
 var app = express();
 
 // view engine setup
