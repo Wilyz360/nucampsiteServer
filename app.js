@@ -34,31 +34,41 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(cookieParser('12345-67890-09876-54321'));
 
 // Set up basic Authentication
 // user must authenticate before can access any data
 function auth(req, res, next) {
-  console.log(req.headers);
-  const authHeader = req.headers.authorization;
-  if(!authHeader){ // if it is null
-    const err = new Error('You are not authenticated!');
-    res.setHeader('WWW-Authenticate', 'Basic'); // The server ask for authentication and the authentication is basic
-    err.status = 401;
-    return next(err); // Pass the error msg to express to handle error msg and authentication request back to the client
-  }
+  if(!req.signedCookies.user) { // if upcomming req doesnt no include signedCookies.user property or signed cookie value. it means the client has no be authenticated
+    const authHeader = req.headers.authorization;
+    if(!authHeader){ // if it is null
+      const err = new Error('You are not authenticated!');
+      res.setHeader('WWW-Authenticate', 'Basic'); // The server ask for authentication and the authentication is basic
+      err.status = 401;
+      return next(err); // Pass the error msg to express to handle error msg and authentication request back to the client
+    }
 
-  // Parse authentication header and validate username and password
-  const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':'); 
-  const user = auth[0];
-  const pass = auth[1];
-  if(user === 'admin' && pass === 'password'){
-    return next() // authorized
+    // Parse authentication header and validate username and password
+    const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':'); 
+    const user = auth[0];
+    const pass = auth[1];
+    if(user === 'admin' && pass === 'password'){ // user and pass are valid
+      res.cookie('user', 'admin', {signed: true}); // Set up new cookie (name of cookie, store in the name property, config value)
+      return next() // authorized
+    } else {
+      const err = new Error('You are not authenticated!');
+      res.setHeader('WWW-Authenticate', 'Basic'); // The server ask for authentication and the authentication is basic
+      err.status = 401;
+      return next(err); 
+    }
   } else {
-    const err = new Error('You are not authenticated!');
-    res.setHeader('WWW-Authenticate', 'Basic'); // The server ask for authentication and the authentication is basic
-    err.status = 401;
-    return next(err); 
+    if(req.signedCookies.user === 'admin'){
+      return next(); // pass the client to the next middleware function
+    } else {
+      const err = new Error('You are not authenticated!');
+      err.status = 401;
+      return next(err);
+    }
   }
 }
 app.use(auth);
