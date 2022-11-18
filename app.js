@@ -45,34 +45,21 @@ app.use(session({
   store: new FileStore()
 }));
 
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+
 // Set up basic Authentication
 // user must authenticate before can access any data
 function auth(req, res, next) {
   console.log(req.session)
   if(!req.session.user) { // if upcomming req doesnt no include session. it means the client has no be authenticated
-    const authHeader = req.headers.authorization;
-    if(!authHeader){ // if it is null
-      const err = new Error('You are not authenticated!');
-      res.setHeader('WWW-Authenticate', 'Basic'); // The server ask for authentication and the authentication is basic
-      err.status = 401;
-      return next(err); // Pass the error msg to express to handle error msg and authentication request back to the client
-    }
-
-    // Parse authentication header and validate username and password
-    const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':'); 
-    const user = auth[0];
-    const pass = auth[1];
-    if(user === 'admin' && pass === 'password'){ // user and pass are valid
-      req.session.user = 'admin';  // Set up new session
-      return next() // authorized
-    } else {
-      const err = new Error('You are not authenticated!');
-      res.setHeader('WWW-Authenticate', 'Basic'); // The server ask for authentication and the authentication is basic
-      err.status = 401;
-      return next(err); 
-    }
+    
+    const err = new Error('You are not authenticated!');
+    err.status = 401;
+    return next(err); // Pass the error msg to express to handle error msg and authentication request back to the client
+    
   } else {
-    if(req.session.user === 'admin'){
+    if(req.session.user === 'authenticated'){
       return next(); // pass the client to the next middleware function
     } else {
       const err = new Error('You are not authenticated!');
@@ -86,8 +73,6 @@ app.use(auth);
 // Data Access 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
 app.use('/campsites', campsiteRouter);
 app.use('/promotions', promotionRouter);
 app.use('/partners', partnerRouter);
