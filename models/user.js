@@ -5,6 +5,14 @@ const Schema = moongose.Schema;
 
 // Schema validation lets you create validation rules for your fields, such as allowed data types and value ranges.
 const userSchema = new Schema({ // Create user Schema
+  firstname: {
+    type: String,
+    default: ''
+  },
+  lastname: {
+    type: String,
+    default: ''
+  },
   admin: {
     type: Boolean,
     default: false

@@ -12,6 +12,7 @@ campsiteRouter.route('/')
 .get((req, res, next) => { // next for deal with errors
     // get method: the client is asking to send back data for all campsites
     Campsite.find() // this will query the database for all the documents
+    .populate('comments.author')
     .then( campsites => { // acess the results from the find method as campsites
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
@@ -45,6 +46,7 @@ campsiteRouter.route('/:campsiteId')
 .get((req, res, next) => {
      // Get docuement by id
      Campsite.findById(req.params.campsiteId)
+     .populate('comments.author')
      .then( campsite => { // campsite var will contain the document
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
@@ -84,6 +86,7 @@ campsiteRouter.route('/:campsiteId')
 campsiteRouter.route('/:campsiteId/comments') 
 .get((req, res, next) => { 
     Campsite.findById(req.params.campsiteId) // it looks for a single campsite comment 
+    .populate('comments.author')
     .then( campsite => { 
         if(campsite){ // check if campsite exist
             res.statusCode = 200;
@@ -100,6 +103,7 @@ campsiteRouter.route('/:campsiteId/comments')
     Campsite.findById(req.params.campsiteId) // it looks for a single campsite comment 
     .then( campsite => { 
         if(campsite){
+            req.body.author = req.user._id;
             campsite.comments.push(req.body); // add new comment to the comment array of the campsite collection
             campsite.save() // to save the new comment 
             .then( campsite => {
@@ -145,6 +149,7 @@ campsiteRouter.route('/:campsiteId/comments')
 campsiteRouter.route('/:campsiteId/comments/:commentId') // handle for specific comment of specific campsite
 .get((req, res, next) => { 
     Campsite.findById(req.params.campsiteId) // it looks for a single campsite comment 
+    .populate('comments.author')
     .then( campsite => { 
         if(campsite && campsite.comments.id(req.params.commentId)){ // check if campsite and commentId exist
             res.statusCode = 200;

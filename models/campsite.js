@@ -16,8 +16,8 @@ const commentSchema = new Schema({ // for storing comments documents about a cam
          required: true,
     },
     author: {
-        type: String,
-        required: true,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
    } 
 }, {
     timestamps: true
