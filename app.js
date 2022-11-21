@@ -5,6 +5,8 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
+const passport = require('passport');
+const authenticate = require('./authenticate');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -45,27 +47,23 @@ app.use(session({
   store: new FileStore()
 }));
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
 // Set up basic Authentication
 // user must authenticate before can access any data
 function auth(req, res, next) {
-  console.log(req.session)
-  if(!req.session.user) { // if upcomming req doesnt no include session. it means the client has no be authenticated
-    
+  console.log(req.user);
+  if(!req.user) { // if upcomming req doesnt no include session. it means the client has no be authenticated
     const err = new Error('You are not authenticated!');
     err.status = 401;
     return next(err); // Pass the error msg to express to handle error msg and authentication request back to the client
     
   } else {
-    if(req.session.user === 'authenticated'){
       return next(); // pass the client to the next middleware function
-    } else {
-      const err = new Error('You are not authenticated!');
-      err.status = 401;
-      return next(err);
-    }
   }
 }
 app.use(auth);
