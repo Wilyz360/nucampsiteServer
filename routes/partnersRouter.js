@@ -1,5 +1,6 @@
 const express = require('express');
 const Partner = require('../models/partners');
+const authenticate = require('../authenticate');
 
 const partnerRouter = express.Router();
 
@@ -13,7 +14,7 @@ partnerRouter.route('/')
         res.json(partners);
     }).catch( err => next(err) ); // it pass the error to the overall error handler for this express application
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, (req, res, next) => {
     // Create new campsite document using the request body which should contain information for the campsite to post from the client
     Partner.create(req.body).then( partner => { // campsite contain information that was posted
         console.log('Partner Created', partner); // get information log to the console
@@ -22,11 +23,11 @@ partnerRouter.route('/')
         res.json(partner); // send info about the posted docuemnt to the client
     }).catch( err => next(err) );
 })
-.put((req, res) => {
+.put(authenticate.verifyUser, (req, res) => {
     res.statusCode = 403,
     res.end('PUT operation not supported on /partner');
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser, (req, res, next) => {
     // delete all the campsites
     Partner.deleteMany() // delete every documents in the campsite's collection
     .then( response => { // it gives information about how many documents were deleted
@@ -47,11 +48,11 @@ partnerRouter.route('/:partnerId')
      })
      .catch( err => next(err) );
 })
-.post((req, res) => {
+.post(authenticate.verifyUser, (req, res) => {
     res.statusCode = 403;
     res.end(`POST operation not supported on /campstes/${req.params.partnerId}`);
 })
-.put((req, res, next) => { 
+.put(authenticate.verifyUser, (req, res, next) => { 
     // Update campsite by id
     Partner.findByIdAndUpdate(req.params.partnerId, {
         $set: req.body // mongo operator for updating
@@ -65,7 +66,7 @@ partnerRouter.route('/:partnerId')
     })
     .catch( err => next(err)); 
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser, (req, res, next) => {
     Partner.findByIdAndDelete(req.params.partnerId)
     .then( response => {
         res.statusCode = 200;

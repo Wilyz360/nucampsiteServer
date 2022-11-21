@@ -1,5 +1,6 @@
 const express = require('express');
 const Promotion = require('../models/promotion');
+const authenticate = require('../authenticate');
 
 const promotionRouter = express.Router();
 
@@ -13,7 +14,7 @@ promotionRouter.route('/')
         res.json(promotion);
     }).catch( err => next(err) ); // it pass the error to the overall error handler for this express application
 })
-.post((req, res, next) => {
+.post(authenticate.verifyUser, (req, res, next) => {
     // Create new campsite document using the request body which should contain information for the campsite to post from the client
     Promotion.create(req.body).then( promotion => { // campsite contain information that was posted
         console.log('Promotion Created', promotion); // get information log to the console
@@ -22,11 +23,11 @@ promotionRouter.route('/')
         res.json(promotion); // send info about the posted docuemnt to the client
     }).catch( err => next(err) );
 })
-.put((req, res) => {
+.put(authenticate.verifyUser, (req, res) => {
     res.statusCode = 403,
     res.end('PUT operation not supported on /promotion');
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser, (req, res, next) => {
     // delete all the campsites
     Promotion.deleteMany() // delete every documents in the campsite's collection
     .then( response => { // it gives information about how many documents were deleted
@@ -47,11 +48,11 @@ promotionRouter.route('/:promotionId')
      })
      .catch( err => next(err) );
 })
-.post((req, res) => {
+.post(authenticate.verifyUser, (req, res) => {
     res.statusCode = 403;
     res.end(`POST operation not supported on /promotion/${req.params.promotionId}`);
 })
-.put((req, res, next) => { 
+.put(authenticate.verifyUser, (req, res, next) => { 
     // Update campsite by id
     Promotion.findByIdAndUpdate(req.params.promotionId, {
         $set: req.body // mongo operator for updating
@@ -65,7 +66,7 @@ promotionRouter.route('/:promotionId')
     })
     .catch( err => next(err)); 
 })
-.delete((req, res, next) => {
+.delete(authenticate.verifyUser, (req, res, next) => {
     Promotion.findByIdAndDelete(req.params.promotionId)
     .then( response => {
         res.statusCode = 200;

@@ -1,12 +1,9 @@
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
-var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-const session = require('express-session');
-const FileStore = require('session-file-store')(session);
 const passport = require('passport');
-const authenticate = require('./authenticate');
+const config = require('./config');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -17,7 +14,7 @@ const promotionRouter = require('./routes/promotionRouter');
 //Connect Express Server to MongoDB/Mongoose
 const mongoose = require('mongoose'); // get mongoose API
 
-const url = 'mongodb://localhost:27017/nucampsite'; // url for mogodb server
+const url = config.mongoUrl; // url for mogodb server
 const connect = mongoose.connect(url, { // set up connection
   useCreateIndex: true,
   useFindAndModify: false,
@@ -39,34 +36,13 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 //app.use(cookieParser('12345-67890-09876-54321'));
-app.use(session({
-  name: 'session-id',
-  secret: '12345-67890-09876-54321',
-  saveUninitialized: false,
-  resave: false,
-  store: new FileStore()
-}));
+
 
 app.use(passport.initialize());
-app.use(passport.session());
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
-// Set up basic Authentication
-// user must authenticate before can access any data
-function auth(req, res, next) {
-  console.log(req.user);
-  if(!req.user) { // if upcomming req doesnt no include session. it means the client has no be authenticated
-    const err = new Error('You are not authenticated!');
-    err.status = 401;
-    return next(err); // Pass the error msg to express to handle error msg and authentication request back to the client
-    
-  } else {
-      return next(); // pass the client to the next middleware function
-  }
-}
-app.use(auth);
 
 // Data Access 
 app.use(express.static(path.join(__dirname, 'public')));
